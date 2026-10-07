@@ -2,9 +2,12 @@ import React from 'react'
 
 const Experience = () => {
     return (
-        <div>
-
-        </div>
+        <>
+            <mesh>
+                <boxGeometry />
+                <meshBasicMaterial color={'red'} />
+            </mesh>
+        </>
     )
 }
 
