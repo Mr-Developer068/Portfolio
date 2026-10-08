@@ -1,11 +1,14 @@
 import { useGSAP } from '@gsap/react'
 import { useTexture } from '@react-three/drei'
 import React, { useMemo, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0 }) => {
 
     const texture = useTexture(project.thumbnail)
     const meshRef = useRef(null)
+
+    const navigate = useNavigate()
 
     const { safeContext } = useGSAP(() => {
 
@@ -55,9 +58,20 @@ const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0
         })
     })
 
+    const handleCardClick = (e) => {
+        e.stopPropagation();
+        navigate(`/project/${project.slug}`)
+    }
+
     return (
         <>
-            <mesh ref={meshRef} onPointerOver={hoverItUp} onPointerLeave={hoverItDown}>
+            <mesh
+                ref={meshRef}
+                rotateY={baseRotationY}
+                onPointerOver={hoverItUp}
+                onPointerLeave={hoverItDown}
+                onClick={handleCardClick}
+            >
                 <planeGeometry />
                 <meshBasicMaterial />
             </mesh>
