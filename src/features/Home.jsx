@@ -5,7 +5,7 @@ import Experience from '../three/Experience'
 
 const Home = () => {
     return (
-        <div>
+        <div className="h-screen w-full flex items-center justify-center">
             <Canvas>
                 <OrbitControls />
                 <Experience />

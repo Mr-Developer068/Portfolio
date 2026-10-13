@@ -2,6 +2,8 @@ import { useGSAP } from '@gsap/react'
 import { useTexture } from '@react-three/drei'
 import React, { useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import gsap from 'gsap'
+import * as THREE from "three"
 
 
 const vertexShader = `
@@ -17,7 +19,14 @@ const fragmentShader = `
 `;
 
 
-const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0 }) => {
+const Card = ({
+    project,
+    index,
+    hoveredIndex,
+    setHoveredIndex,
+    position,
+    baseRotationY = 0
+}) => {
 
     const texture = useTexture(project.thumbnail)
     const meshRef = useRef(null)
@@ -38,7 +47,7 @@ const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0
 
     const hoverItUp = contextSafe((e) => {
         e.stopPropagation();
-        setHoveredIndex(hoveredIndex);
+        setHoveredIndex(index);
         document.body.style.cursor = 'pointer';
         gsap.to(meshRef.current.rotation, {
             y: baseRotationY + 0.25,
@@ -79,14 +88,18 @@ const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0
         <>
             <mesh
                 ref={meshRef}
-                rotateY={baseRotationY}
+                position={position}
+                rotation-y={baseRotationY}
                 onPointerOver={hoverItUp}
                 onPointerLeave={hoverItDown}
                 onClick={handleCardClick}
             >
-                <planeGeometry />
-                <shaderMaterial vertexShader={vertexShader}
-                    fragmentShader={fragmentShader} />
+                <planeGeometry args={[width, height]} />
+                <shaderMaterial
+                    vertexShader={vertexShader}
+                    fragmentShader={fragmentShader}
+                    side={THREE.DoubleSide}
+                />
             </mesh>
         </>
     )
