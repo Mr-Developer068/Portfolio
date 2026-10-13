@@ -3,6 +3,20 @@ import { useTexture } from '@react-three/drei'
 import React, { useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+
+const vertexShader = `
+    void main(){
+        gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }
+`
+
+const fragmentShader = `
+    void main(){
+        gl_FragColor=vec4(1.0,1.0,1.0,1.0)
+    }
+`
+
+
 const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0 }) => {
 
     const texture = useTexture(project.thumbnail)
@@ -73,7 +87,7 @@ const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0
                 onClick={handleCardClick}
             >
                 <planeGeometry />
-                <meshBasicMaterial />
+                <shaderMaterial vertexShader='' fragmentShader='' />
             </mesh>
         </>
     )
