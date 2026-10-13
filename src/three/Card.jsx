@@ -8,13 +8,13 @@ const vertexShader = `
     void main(){
         gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);
     }
-`
+`;
 
 const fragmentShader = `
     void main(){
-        gl_FragColor=vec4(1.0,1.0,1.0,1.0)
+        gl_FragColor=vec4(0.0,0.0,1.0,1.0);
     }
-`
+`;
 
 
 const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0 }) => {
@@ -24,9 +24,7 @@ const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0
 
     const navigate = useNavigate()
 
-    const { safeContext } = useGSAP(() => {
-
-    }, { scope: meshRef })
+    const { contextSafe } = useGSAP(() => { }, { scope: meshRef })
 
     const [width, height] = useMemo(() => {
 
@@ -38,7 +36,7 @@ const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0
 
     }, [texture])
 
-    const hoverItUp = safeContext((e) => {
+    const hoverItUp = contextSafe((e) => {
         e.stopPropagation();
         setHoveredIndex(hoveredIndex);
         document.body.style.cursor = 'pointer';
@@ -56,7 +54,7 @@ const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0
         })
     })
 
-    const hoverItDown = safeContext(() => {
+    const hoverItDown = contextSafe(() => {
         setHoveredIndex(null);
         gsap.to(meshRef.current.rotation, {
             y: baseRotationY,
@@ -87,7 +85,8 @@ const Card = ({ project, index, hoveredIndex, setHoveredIndex, baseRotationY = 0
                 onClick={handleCardClick}
             >
                 <planeGeometry />
-                <shaderMaterial vertexShader='' fragmentShader='' />
+                <shaderMaterial vertexShader={vertexShader}
+                    fragmentShader={fragmentShader} />
             </mesh>
         </>
     )

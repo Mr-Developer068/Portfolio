@@ -90,3 +90,5 @@ const projects = [
         tags: ['Interactive', 'Creative Technology'],
     },
 ];
+
+export default projects
