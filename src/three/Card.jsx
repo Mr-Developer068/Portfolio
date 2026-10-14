@@ -13,6 +13,7 @@ const vertexShader = `
 `;
 
 const fragmentShader = `
+    uniform sampler2D uTexture;
     void main(){
         gl_FragColor=vec4(0.0,0.0,1.0,1.0);
     }
@@ -84,6 +85,10 @@ const Card = ({
         navigate(`/project/${project.slug}`)
     }
 
+    const uniform = useMemo(() => ({
+        uTexture: { value: texture },
+    }))
+
     return (
         <>
             <mesh
@@ -98,6 +103,7 @@ const Card = ({
                 <shaderMaterial
                     vertexShader={vertexShader}
                     fragmentShader={fragmentShader}
+                    uniforms={uniform}
                     side={THREE.DoubleSide}
                 />
             </mesh>

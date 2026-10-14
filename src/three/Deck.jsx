@@ -1,28 +1,81 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Card from './Card'
+import { useFrame } from '@react-three/fiber'
 
 const TILT_Y = -0.35
 const RADIUS = 5
-const AUTO_SPEED = 0.6
+
+const AUTO_SPEED = 0.25          // radians per second
 const WHEEL_SENSITIVITY = 0.0015
-const DAMPING = 0.0008
+const DAMPING = 3.0
 
 const Deck = ({ projects }) => {
     const [hoveredIndex, setHoveredIndex] = useState(null)
 
+    const groupRef = useRef(null)
+    const velocityRef = useRef(0)
+    const hoveredRef = useRef(null)
+
+    useEffect(() => {
+        hoveredRef.current = hoveredIndex
+    }, [hoveredIndex])
+
+    useEffect(() => {
+        const onWheel = (e) => {
+            e.preventDefault()
+
+            if (hoveredRef.current !== null) return
+
+            // Add scroll momentum to the current velocity
+            velocityRef.current +=
+                e.deltaY * WHEEL_SENSITIVITY
+        }
+
+        window.addEventListener('wheel', onWheel, {
+            passive: false,
+        })
+
+        return () => {
+            window.removeEventListener('wheel', onWheel)
+        }
+    }, [])
+
+    useFrame((state, delta) => {
+        if (!groupRef.current) return
+
+        // Freeze everything while hovering a card
+        if (hoveredRef.current !== null) {
+            velocityRef.current = 0
+            return
+        }
+
+        // Smoothly decay wheel momentum
+        velocityRef.current *= Math.exp(-DAMPING * delta)
+
+        // Combine automatic rotation with wheel momentum
+        const rotationSpeed =
+            AUTO_SPEED + velocityRef.current
+
+        groupRef.current.rotation.y +=
+            rotationSpeed * delta
+
+        // Remove negligible wheel momentum
+        if (Math.abs(velocityRef.current) < 0.001) {
+            velocityRef.current = 0
+        }
+    })
+
     const totalCards = projects.length
 
     return (
-        <group>
+        <group ref={groupRef}>
             {projects.map((project, idx) => {
-                // Divide the full circle equally between cards
-                const angle = (idx / totalCards) * Math.PI * 2
+                const angle =
+                    (idx / totalCards) * Math.PI * 2
 
-                // Position each card on the X-Z plane
                 const x = Math.sin(angle) * RADIUS
                 const z = Math.cos(angle) * RADIUS
 
-                // Make the card face toward the center
                 const rotationY = angle + Math.PI
 
                 return (
