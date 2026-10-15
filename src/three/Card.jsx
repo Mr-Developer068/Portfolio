@@ -7,15 +7,19 @@ import * as THREE from "three"
 
 
 const vertexShader = `
+    varying vec2 vUv;
     void main(){
+        vUv=uv;
         gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);
     }
 `;
 
 const fragmentShader = `
     uniform sampler2D uTexture;
+    varying vec2 vUv;
     void main(){
-        gl_FragColor=vec4(0.0,0.0,1.0,1.0);
+        vec4 texture=texture2D(uTexture,vUv);
+        gl_FragColor=texture;
     }
 `;
 
