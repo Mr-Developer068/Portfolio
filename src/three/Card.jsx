@@ -9,58 +9,17 @@ import * as THREE from "three"
 
 
 const vertexShader = `
-    varying vec2 vUv;
-
-    uniform float uWind;
-    uniform float uHover;
-    uniform float uTime;
-
-    void main() {
-        vUv = uv;
-
-        vec3 transformed = position;
-
-        // Normalized horizontal coordinate: -1 to 1
-        float x = uv.x * 2.0 - 1.0;
-
-        // Bell-shaped curve: strongest at the center,
-        // fading smoothly toward both edges
-        float bell = exp(-x * x * 4.0);
-
-        // Strongest deformation around the middle
-        // of the card's height
-        float verticalCurve = sin(uv.y * 3.14159265);
-
-        // Hover curl and directional scroll gust
-        float bend = uHover * 0.24 + uWind * 0.40;
-
-        // A subtle traveling ripple during a gust
-        float ripple = sin(
-            uv.y * 6.2831853 - uTime * 3.0
-        ) * abs(uWind) * 0.025;
-
-        transformed.z +=
-            bend * bell * verticalCurve + ripple * bell;
-
-        // Slight sideways flex for a flexible-paper feel
-        transformed.x +=
-            x * bell * abs(bend) * 0.035;
-
-        gl_Position = projectionMatrix *
-            modelViewMatrix * vec4(transformed, 1.0);
+    void main(){
+        gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);
     }
 `;
 
 const fragmentShader = `
     uniform sampler2D uTexture;
-    varying vec2 vUv;
-
-    void main() {
-        vec4 color = texture2D(uTexture, vUv);
-        gl_FragColor = color;
+    void main(){
+        gl_FragColor=vec4(0.0,0.0,1.0,1.0);
     }
 `;
-
 
 
 const Card = ({
