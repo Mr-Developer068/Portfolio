@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react'
 import Card from './Card'
 import { useFrame } from '@react-three/fiber'
@@ -5,7 +6,7 @@ import { useFrame } from '@react-three/fiber'
 const TILT_Y = -0.35
 const RADIUS = 5
 
-const AUTO_SPEED = 0.25          // radians per second
+const AUTO_SPEED = 0.25
 const WHEEL_SENSITIVITY = 0.0015
 const DAMPING = 3.0
 
@@ -15,6 +16,10 @@ const Deck = ({ projects }) => {
     const groupRef = useRef(null)
     const velocityRef = useRef(0)
     const hoveredRef = useRef(null)
+
+    // Wind physics
+    const windRef = useRef(0)
+    const windTargetRef = useRef(0)
 
     useEffect(() => {
         hoveredRef.current = hoveredIndex
@@ -26,9 +31,15 @@ const Deck = ({ projects }) => {
 
             if (hoveredRef.current !== null) return
 
-            // Add scroll momentum to the current velocity
-            velocityRef.current +=
-                e.deltaY * WHEEL_SENSITIVITY
+            const scrollForce = e.deltaY * WHEEL_SENSITIVITY
+
+            velocityRef.current += scrollForce
+
+            // Scroll creates a gust of wind
+            windTargetRef.current = Math.max(
+                -1,
+                Math.min(1, scrollForce * 3)
+            )
         }
 
         window.addEventListener('wheel', onWheel, {
@@ -43,23 +54,39 @@ const Deck = ({ projects }) => {
     useFrame((state, delta) => {
         if (!groupRef.current) return
 
-        // Freeze everything while hovering a card
+        // Recover gracefully when hovering
         if (hoveredRef.current !== null) {
             velocityRef.current = 0
-            return
+            windTargetRef.current = 0
         }
 
-        // Smoothly decay wheel momentum
+        // Wind quickly settles back to calm
+        windTargetRef.current *= Math.exp(-2.5 * delta)
+
+        windRef.current +=
+            (windTargetRef.current - windRef.current) *
+            Math.min(1, delta * 5)
+
         velocityRef.current *= Math.exp(-DAMPING * delta)
 
-        // Combine automatic rotation with wheel momentum
         const rotationSpeed =
             AUTO_SPEED + velocityRef.current
 
-        groupRef.current.rotation.y +=
-            rotationSpeed * delta
+        groupRef.current.rotation.y += rotationSpeed * delta
 
-        // Remove negligible wheel momentum
+        // Wind subtly rocks the whole deck
+        groupRef.current.rotation.x +=
+            (
+                windRef.current * 0.10 -
+                groupRef.current.rotation.x
+            ) * Math.min(1, delta * 3)
+
+        groupRef.current.rotation.z +=
+            (
+                -windRef.current * 0.06 -
+                groupRef.current.rotation.z
+            ) * Math.min(1, delta * 3)
+
         if (Math.abs(velocityRef.current) < 0.001) {
             velocityRef.current = 0
         }

@@ -2,6 +2,7 @@ import { useGSAP } from '@gsap/react'
 import { useTexture } from '@react-three/drei'
 import React, { useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useFrame } from '@react-three/fiber'
 import gsap from 'gsap'
 import * as THREE from "three"
 
@@ -35,6 +36,8 @@ const Card = ({
 
     const texture = useTexture(project.thumbnail)
     const meshRef = useRef(null)
+    const windRotationRef = useRef(0)
+    const windOffsetRef = useRef(0)
 
     const navigate = useNavigate()
 
@@ -92,6 +95,31 @@ const Card = ({
     const uniform = useMemo(() => ({
         uTexture: { value: texture },
     }))
+
+    useFrame((state, delta) => {
+        if (!meshRef.current) return
+
+        const isHovered = hoveredIndex === index
+
+        if (isHovered) return
+
+        const time = state.clock.elapsedTime
+
+        // Gentle ambient sway
+        const targetRotation =
+            Math.sin(time * 1.8 + index * 1.2) * 0.025
+
+        windRotationRef.current +=
+            (targetRotation - windRotationRef.current) *
+            Math.min(1, delta * 3)
+
+        // Apply subtle movement without fighting GSAP hover animation
+        meshRef.current.rotation.z +=
+            (
+                windRotationRef.current -
+                meshRef.current.rotation.z
+            ) * Math.min(1, delta * 2)
+    })
 
     return (
         <>
