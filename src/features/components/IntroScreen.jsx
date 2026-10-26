@@ -1,5 +1,8 @@
-
 import React, { useEffect, useRef } from 'react'
+import { Canvas } from '@react-three/fiber'
+import DeveloperText from './Developer3DText'
+
+
 
 const IntroScreen = () => {
     const canvasRef = useRef(null)
@@ -200,15 +203,44 @@ const IntroScreen = () => {
         }
     }, [])
 
+
     return (
-        <div className="relative h-screen w-full overflow-hidden bg-[#030305]">
-            <canvas
-                ref={canvasRef}
-                aria-hidden="true"
-                className="absolute inset-0 block h-full w-full"
-            />
-        </div>
+        <section className="intro-section relative h-[250vh] bg-[#030305]">
+            <div className="sticky top-0 h-screen w-full overflow-hidden">
+                {/* Starfield background */}
+                <canvas
+                    ref={canvasRef}
+                    aria-hidden="true"
+                    className="absolute inset-0 z-0 block h-full w-full"
+                />
+
+                {/* 3D typography */}
+                <div className="absolute inset-0 z-10 w-full">
+                    <Canvas
+                        camera={{ position: [0, 0, 7], fov: 45 }}
+                        dpr={[1, 1.5]}
+                        gl={{ alpha: true, antialias: true }}
+                    >
+                        <ambientLight intensity={1.2} />
+
+                        <directionalLight
+                            position={[-4, 4, 2]}
+                            intensity={2.5}
+                        />
+
+                        <pointLight
+                            position={[-3, 1, 3]}
+                            intensity={20}
+                            color="#F5C56B"
+                        />
+
+                        <DeveloperText />
+                    </Canvas>
+                </div>
+            </div>
+        </section>
     )
+
 }
 
 export default IntroScreen
