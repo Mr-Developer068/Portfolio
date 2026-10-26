@@ -9,15 +9,60 @@ import * as THREE from "three"
 
 
 const vertexShader = `
-    void main(){
-        gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    varying vec2 vUv;
+
+    void main() {
+        vUv = uv;
+
+        gl_Position = projectionMatrix
+            * modelViewMatrix
+            * vec4(position, 1.0);
     }
 `;
 
 const fragmentShader = `
     uniform sampler2D uTexture;
-    void main(){
-        gl_FragColor=vec4(0.0,0.0,1.0,1.0);
+    varying vec2 vUv;
+
+    void main() {
+        vec4 texColor = texture2D(uTexture, vUv);
+
+        // Preserve the original texture colors
+        vec3 color = texColor.rgb;
+
+        // Richer contrast
+        color = (color - 0.5) * 1.10 + 0.5;
+
+        // Slightly enhance color saturation
+        float luminance = dot(
+            color,
+            vec3(0.299, 0.587, 0.114)
+        );
+        color = mix(vec3(luminance), color, 1.08);
+
+        // Subtle premium warmth
+        color *= vec3(1.025, 1.012, 0.99);
+
+        // Soft vignette for cinematic depth
+        vec2 uv = vUv * 2.0 - 1.0;
+        float vignette = 1.0 - smoothstep(
+            0.35,
+            1.25,
+            length(uv)
+        );
+        color *= mix(0.76, 1.0, vignette);
+
+        // Gentle edge darkening
+        float edge = min(
+            min(vUv.x, 1.0 - vUv.x),
+            min(vUv.y, 1.0 - vUv.y)
+        );
+        float edgeShade = smoothstep(0.0, 0.025, edge);
+        color *= mix(0.94, 1.0, edgeShade);
+
+        color = clamp(color, 0.0, 1.0);
+
+        gl_FragColor = vec4(color, texColor.a);
     }
 `;
 
@@ -93,35 +138,14 @@ const Card = ({
         navigate(`/project/${project.slug}`)
     }
 
+
     const uniform = useMemo(() => ({
         uTexture: { value: texture },
-        uWind: { value: 0 },
-        uHover: { value: 0 },
-        uTime: { value: 0 },
     }), [texture])
 
 
     useFrame((state, delta) => {
         if (!meshRef.current) return
-
-        const isHovered = hoveredIndex === index
-
-        // Read shared scroll wind from Deck
-        const targetWind = windStrength?.current ?? 0
-
-        // Smooth shader response
-        uniform.uWind.value +=
-            (targetWind - uniform.uWind.value) *
-            Math.min(1, delta * 7)
-
-        // Hover creates a stronger paper curl
-        const targetHover = isHovered ? 1 : 0
-
-        uniform.uHover.value +=
-            (targetHover - uniform.uHover.value) *
-            Math.min(1, delta * 6)
-
-        uniform.uTime.value = state.clock.elapsedTime
     })
     return (
         <>
