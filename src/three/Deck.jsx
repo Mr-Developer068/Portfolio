@@ -114,6 +114,7 @@ const Deck = ({ projects }) => {
                         setHoveredIndex={setHoveredIndex}
                         position={[x, 0, z]}
                         baseRotationY={rotationY + TILT_Y}
+                        windStrength={windRef}
                     />
                 )
             })}
