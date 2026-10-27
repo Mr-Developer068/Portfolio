@@ -4,7 +4,7 @@ import DeveloperText from './Developer3DText'
 
 
 
-const IntroScreen = () => {
+const IntroScreen = ({ setIntroDone, introDone }) => {
     const canvasRef = useRef(null)
 
     useEffect(() => {
@@ -121,6 +121,15 @@ const IntroScreen = () => {
         }
 
         const render = (time = 0) => {
+            if (
+                !canvas.width ||
+                !canvas.height ||
+                !starLayer.width ||
+                !starLayer.height
+            ) {
+                return
+            }
+
             // Smoothly interpolate toward the mouse position
             currentX += (mouseX - currentX) * SMOOTHNESS
             currentY += (mouseY - currentY) * SMOOTHNESS
@@ -169,11 +178,17 @@ const IntroScreen = () => {
 
         const start = () => {
             cancelAnimationFrame(animationId)
-            render(0)
 
-            if (!reducedMotion.matches) {
-                animationId = requestAnimationFrame(render)
+            if (
+                canvas.width === 0 ||
+                canvas.height === 0 ||
+                starLayer.width === 0 ||
+                starLayer.height === 0
+            ) {
+                return
             }
+
+            animationId = requestAnimationFrame(render)
         }
 
         const handleResize = () => {
@@ -205,8 +220,8 @@ const IntroScreen = () => {
 
 
     return (
-        <section className="intro-section relative h-[250vh] bg-[#030305]">
-            <div className="sticky top-0 h-screen w-full overflow-hidden">
+        <section className="intro-section relative h-[400vh] bg-[#030305]">
+            <div className="sticky top-0 h-dvh w-full overflow-hidden">
                 {/* Starfield background */}
                 <canvas
                     ref={canvasRef}
@@ -234,7 +249,7 @@ const IntroScreen = () => {
                             color="#F5C56B"
                         />
 
-                        <DeveloperText />
+                        <DeveloperText setIntroDone={setIntroDone} introDone={introDone} />
                     </Canvas>
                 </div>
             </div>

@@ -15,11 +15,9 @@ const WORDS = [
     { text: 'Developer', key: 'developer' },
 ]
 
-const LETTER_GAP = 0.035
-const TEXT_SIZE = 0.85
-const TEXT_DEPTH = 0.12
 
 function AnimatedWord({ text, font, size, depth, gap, startIndex, refs }) {
+
     const letters = useMemo(() => {
         const result = []
         let cursor = 0
@@ -90,30 +88,66 @@ function AnimatedWord({ text, font, size, depth, gap, startIndex, refs }) {
     )
 }
 
-export default function DeveloperText() {
+export default function DeveloperText({ setIntroDone, introDone }) {
     const letterRefs = useRef([])
     const rootRef = useRef(null)
-    const font = useFont(FONT_URL)
-    const { viewport } = useThree()
 
-    const scale = Math.min(1, viewport.width / 12)
+    const wordGroupRef = useRef(null)
+
+    const font = useFont(FONT_URL)
+
+    const { viewport, size } = useThree()
+    // Responsive sizing based on the actual rendered canvas.
+    const isMobile = size.width < 640
+    const isTablet = size.width >= 640 && size.width < 1024
+
+
+    const LETTER_GAP = isMobile ? 0.02 : 0.035
+    const TEXT_SIZE = isMobile ? 0.72 : 0.85
+    const TEXT_DEPTH = isMobile ? 0.08 : 0.12
+
+    const responsiveScale = Math.min(
+        1,
+        viewport.width / (isMobile ? 9 : isTablet ? 11 : 12),
+        viewport.height / 5.5
+    )
+
+    const targetY = viewport.height * (isMobile ? 0.22 : 0.3)
+    const targetX = viewport.width * (isMobile ? 0 : 0.1)
+    const wordGap = isMobile ? 0.5 : isTablet ? 1.5 : 2.6
+
+    const developerX = TEXT_SIZE + wordGap
+
+    console.log("this is size->", developerX)
 
 
     useLayoutEffect(() => {
         const letters = letterRefs.current.filter(Boolean)
         const section = document.querySelector('.intro-section')
 
-        if (!letters.length || !section) return
-
-        const timeDuration = 5
+        if (!letters.length || !section || !wordGroupRef.current) {
+            console.error('Animation setup failed:', {
+                letters: letters.length,
+                sectionFound: Boolean(section),
+                wordGroupFound: Boolean(wordGroupRef.current),
+            })
+            return
+        }
 
         const context = gsap.context(() => {
             const timeline = gsap.timeline({
                 scrollTrigger: {
                     trigger: section,
                     start: 'top top',
-                    end: 'bottom bottom',
-                    scrub: 13,
+                    end: () => `+=${Math.max(1800, window.innerHeight * 2.5)}`,
+                    scrub: 3,
+                    invalidateOnRefresh: true,
+                    // markers: true,
+
+                    onLeave: () => {
+                        console.log('INTRO COMPLETE: switching to Hero')
+                        setIntroDone(true)
+                    },
                 },
             })
 
@@ -125,72 +159,78 @@ export default function DeveloperText() {
             letters.forEach((letter, index) => {
                 const startTime = index * letterDelay
 
-                // 1. Grow smoothly
-                timeline.to(
-                    letter.scale,
-                    {
-                        x: 2,
-                        y: 2,
-                        z: 2,
-                        duration: growDuration,
-                        ease: 'power1.inOut',
-                    },
-                    startTime
-                )
+                timeline.to(letter.scale, {
+                    x: 2,
+                    y: 2,
+                    z: 2,
+                    duration: growDuration,
+                    ease: 'power1.inOut',
+                }, startTime)
 
-                // 2. Rotate while growing
-                timeline.to(
-                    letter.rotation,
-                    {
-                        x: Math.PI * 0.8,
-                        y: Math.PI * 0.2,
-                        z: Math.PI * 0.4,
-                        duration: rotateDuration,
-                        ease: 'power1.inOut',
-                    },
-                    startTime
-                )
+                timeline.to(letter.rotation, {
+                    x: Math.PI * 0.8,
+                    y: Math.PI * 0.2,
+                    z: Math.PI * 0.4,
+                    duration: rotateDuration,
+                    ease: 'power1.inOut',
+                }, startTime)
 
-                // 3. Return to normal size after growing
-                timeline.to(
-                    letter.scale,
-                    {
-                        x: 1,
-                        y: 1,
-                        z: 1,
-                        duration: settleDuration,
-                        ease: 'power1.inOut',
-                    },
-                    startTime + growDuration
-                )
+                timeline.to(letter.scale, {
+                    x: 1,
+                    y: 1,
+                    z: 1,
+                    duration: settleDuration,
+                    ease: 'power1.inOut',
+                }, startTime + growDuration)
 
-                // 4. Settle rotation after the initial rotation
-                timeline.to(
-                    letter.rotation,
-                    {
-                        x: 0,
-                        y: 0,
-                        z: 0,
-                        duration: settleDuration,
-                        ease: 'power1.inOut',
-                    },
-                    startTime + rotateDuration
-                )
+                timeline.to(letter.rotation, {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    duration: settleDuration,
+                    ease: 'power1.inOut',
+                }, startTime + rotateDuration)
             })
+
+            timeline.to(wordGroupRef.current.scale, {
+                x: 0.5,
+                y: 0.5,
+                z: 0.5,
+                duration: 8,
+                ease: 'none',
+            }, '>')
+
+            timeline.to(wordGroupRef.current.position, {
+                y: targetY,
+                x: targetX,
+                duration: 8,
+                ease: 'none',
+            }, '<')
         })
 
         return () => context.revert()
-    }, [])
+    }, [
+        setIntroDone,
+        targetY,
+        targetX,
+        responsiveScale,
+        wordGap,
+        LETTER_GAP,
+        TEXT_SIZE,
+        TEXT_DEPTH,
+    ])
+
+    console.log("this is developer text-->", introDone)
 
     return (
-        <group ref={rootRef} scale={scale}>
+        <group ref={rootRef} scale={responsiveScale}>
             <Float
                 speed={1}
                 rotationIntensity={0.02}
                 floatIntensity={0.06}
             >
                 <Center>
-                    <group>
+                    <group ref={wordGroupRef}>
                         <AnimatedWord
                             text="Mr."
                             font={font}
@@ -201,7 +241,13 @@ export default function DeveloperText() {
                             refs={letterRefs}
                         />
 
-                        <group position={[TEXT_SIZE + 2.6, 0, 0]}>
+                        <group
+                            position={
+                                developerX > 3
+                                    ? [developerX, 0, 0]       // Desktop: same line
+                                    : [0, -TEXT_SIZE * 1.5, 0] // Small screens: below Mr.
+                            }
+                        >
                             <AnimatedWord
                                 text="Developer"
                                 font={font}
