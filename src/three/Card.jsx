@@ -1,10 +1,10 @@
 import { useGSAP } from '@gsap/react'
 import { useTexture } from '@react-three/drei'
-import React, { useMemo, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useContext, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import gsap from 'gsap'
 import * as THREE from "three"
+import { MyContext } from '../context/ProjectContext'
 
 
 
@@ -77,12 +77,14 @@ const Card = ({
     windStrength,
 }) => {
 
+    const handleProjectClick = useContext(MyContext)
+
+    // console.log("this is handle project-", handleProjectClick)
+
     const texture = useTexture(project.thumbnail)
     const meshRef = useRef(null)
-    const windRotationRef = useRef(0)
-    const windOffsetRef = useRef(0)
-
-    const navigate = useNavigate()
+    // const windRotationRef = useRef(0)
+    // const windOffsetRef = useRef(0)
 
     const { contextSafe } = useGSAP(() => { }, { scope: meshRef })
 
@@ -133,10 +135,10 @@ const Card = ({
         })
     })
 
-    const handleCardClick = (e) => {
+    const handleClick = (e) => {
         e.stopPropagation();
-        navigate(`/project/${project.slug}`)
-    }
+        handleProjectClick?.(project.slug);
+    };
 
 
     const uniform = useMemo(() => ({
@@ -155,7 +157,7 @@ const Card = ({
                 rotation-y={baseRotationY}
                 onPointerOver={hoverItUp}
                 onPointerLeave={hoverItDown}
-                onClick={handleCardClick}
+                onClick={handleClick}
             >
                 <planeGeometry args={[width, height, 32, 32]} />
                 <shaderMaterial

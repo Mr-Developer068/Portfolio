@@ -3,17 +3,23 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Home from './features/Home'
 import About from './features/About'
 import Project_Details from './features/Project_Details'
+import AppLayout from './layout/AppLayout'
 
 let router = createBrowserRouter([
   {
-    path: "/",
-    element: <Home />
-  }, {
-    path: "/about",
-    element: <About />
-  }, {
-    path: "/project/:slug",
-    element: <Project_Details />
+    element: <AppLayout />,
+    children: [
+      {
+        path: "/",
+        element: <Home />
+      }, {
+        path: "/about",
+        element: <About />
+      }, {
+        path: "/project/:slug",
+        element: <Project_Details />
+      }
+    ]
   }
 ])
 
